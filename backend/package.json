@@ -9,9 +9,10 @@
     "dev": "node --watch src/server.js"
   },
   "dependencies": {
-    "express": "^4.19.2",
+    "cors": "^2.8.5",
     "dotenv": "^16.4.5",
-    "cors": "^2.8.5"
+    "express": "^4.19.2",
+    "mongoose": "^9.10.1"
   },
   "engines": {
     "node": ">=18.0.0"
