@@ -5,6 +5,7 @@ import { connectDB } from './db.js';
 import authRoutes from './auth/authRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import doctorRoutes from './routes/doctorRoutes.js';
+import patientRoutes from './routes/patientRoutes.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -20,6 +21,9 @@ app.use('/api', userRoutes);
 
 // Doctor profile routes
 app.use('/api/doctors', doctorRoutes);
+
+// Patient profile routes
+app.use('/api/patients', patientRoutes);
 
 app.get('/', (_req, res) => {
   res.json({
