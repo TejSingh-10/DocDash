@@ -3,6 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import { connectDB } from './db.js';
 import authRoutes from './auth/authRoutes.js';
+import userRoutes from './routes/userRoutes.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -12,6 +13,9 @@ app.use(express.json());
 
 // Auth routes
 app.use('/api/auth', authRoutes);
+
+// Protected user routes (requires valid JWT)
+app.use('/api', userRoutes);
 
 app.get('/', (_req, res) => {
   res.json({
