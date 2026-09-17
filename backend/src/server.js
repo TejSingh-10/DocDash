@@ -4,6 +4,7 @@ import cors from 'cors';
 import { connectDB } from './db.js';
 import authRoutes from './auth/authRoutes.js';
 import userRoutes from './routes/userRoutes.js';
+import doctorRoutes from './routes/doctorRoutes.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -16,6 +17,9 @@ app.use('/api/auth', authRoutes);
 
 // Protected user routes (requires valid JWT)
 app.use('/api', userRoutes);
+
+// Doctor profile routes
+app.use('/api/doctors', doctorRoutes);
 
 app.get('/', (_req, res) => {
   res.json({
