@@ -11,7 +11,7 @@ app.use(express.json());
 
 app.get('/', (_req, res) => {
   res.json({
-    message: 'Hello World from Healthcare Management Dashboard API 🏥',
+    message: 'Hello World from Healthcare Management Dashboard API ',
     status: 'ok',
     timestamp: new Date().toISOString(),
   });
@@ -25,10 +25,10 @@ app.get('/health', (_req, res) => {
 connectDB()
   .then(() => {
     app.listen(PORT, () => {
-      console.log(`🚀 Server running at http://localhost:${PORT}`);
+      console.log(`Server running at http://localhost:${PORT}`);
     });
   })
   .catch((err) => {
-    console.error('❌ Failed to connect to MongoDB:', err.message);
+    console.error('Failed to connect to MongoDB:', err.message);
     process.exit(1); // Abort startup — don't serve traffic without a DB.
   });
