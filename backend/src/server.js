@@ -6,6 +6,7 @@ import authRoutes from './auth/authRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import doctorRoutes from './routes/doctorRoutes.js';
 import patientRoutes from './routes/patientRoutes.js';
+import recordRoutes from './routes/recordRoutes.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -24,6 +25,9 @@ app.use('/api/doctors', doctorRoutes);
 
 // Patient profile routes
 app.use('/api/patients', patientRoutes);
+
+// Medical record routes (audit-logged)
+app.use('/api/records', recordRoutes);
 
 app.get('/', (_req, res) => {
   res.json({
