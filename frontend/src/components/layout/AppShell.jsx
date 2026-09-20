@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { NavLink, Outlet } from 'react-router-dom';
+import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext.jsx';
 
 // ---------------------------------------------------------------------------
 // Nav items — add new routes here; the sidebar renders them automatically.
@@ -60,7 +61,7 @@ function MenuIcon({ className }) {
 // Sidebar
 // ---------------------------------------------------------------------------
 
-function Sidebar({ collapsed, onToggle }) {
+function Sidebar({ collapsed, onToggle, user }) {
   return (
     <aside
       className={[
@@ -113,14 +114,16 @@ function Sidebar({ collapsed, onToggle }) {
 
       {/* Bottom user stub */}
       <div className="shrink-0 px-2 py-3 border-t border-neutral-200">
-        <div className="flex items-center gap-3 px-2 py-2 rounded hover:bg-neutral-100 cursor-pointer transition-colors">
+        <div className="flex items-center gap-3 px-2 py-2 rounded">
           <div className="w-7 h-7 rounded-full bg-primary-100 flex items-center justify-center shrink-0">
-            <span className="text-xs font-semibold text-primary-700">U</span>
+            <span className="text-xs font-semibold text-primary-700">
+              {user?.email?.[0]?.toUpperCase() ?? 'U'}
+            </span>
           </div>
           {!collapsed && (
             <div className="min-w-0">
-              <p className="text-sm font-medium text-neutral-800 truncate">User Name</p>
-              <p className="text-xs text-neutral-500 truncate">Role</p>
+              <p className="text-sm font-medium text-neutral-800 truncate">{user?.email ?? '—'}</p>
+              <p className="text-xs text-neutral-500 truncate capitalize">{user?.role?.toLowerCase() ?? ''}</p>
             </div>
           )}
         </div>
@@ -134,6 +137,14 @@ function Sidebar({ collapsed, onToggle }) {
 // ---------------------------------------------------------------------------
 
 function Navbar({ onMenuClick }) {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  function handleLogout() {
+    logout();
+    navigate('/login', { replace: true });
+  }
+
   return (
     <header className="h-14 shrink-0 flex items-center gap-4 px-4 bg-white border-b border-neutral-200">
       {/* Mobile menu toggle */}
@@ -145,15 +156,26 @@ function Navbar({ onMenuClick }) {
         <MenuIcon className="w-5 h-5" />
       </button>
 
-      {/* Page title placeholder — populated by route pages */}
+      {/* Page title */}
       <h1 className="text-base font-semibold text-neutral-800 flex-1 truncate">
         Healthcare Management Dashboard
       </h1>
 
-      {/* Right-side slot — notifications, avatar, etc. (placeholder) */}
-      <div className="flex items-center gap-2">
+      {/* Right-side: user badge + logout */}
+      <div className="flex items-center gap-3">
+        <span className="hidden sm:block text-sm text-neutral-500">
+          {user?.email}
+        </span>
+        <button
+          onClick={handleLogout}
+          className="text-sm text-neutral-500 hover:text-danger-700 transition-colors focus-ring rounded px-2 py-1"
+        >
+          Sign out
+        </button>
         <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center">
-          <span className="text-xs font-semibold text-primary-700">U</span>
+          <span className="text-xs font-semibold text-primary-700">
+            {user?.email?.[0]?.toUpperCase() ?? 'U'}
+          </span>
         </div>
       </div>
     </header>
@@ -166,12 +188,13 @@ function Navbar({ onMenuClick }) {
 
 export default function AppShell() {
   const [collapsed, setCollapsed] = useState(false);
+  const { user } = useAuth();
 
   return (
     <div className="flex h-screen overflow-hidden bg-neutral-50">
       {/* Sidebar — hidden on mobile, always visible on md+ */}
       <div className="hidden md:flex">
-        <Sidebar collapsed={collapsed} onToggle={() => setCollapsed((c) => !c)} />
+        <Sidebar collapsed={collapsed} onToggle={() => setCollapsed((c) => !c)} user={user} />
       </div>
 
       {/* Main area */}
