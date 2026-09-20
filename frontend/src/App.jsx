@@ -1,37 +1,43 @@
-function App() {
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-      <div className="bg-white rounded-2xl shadow-xl p-10 max-w-md w-full text-center">
-        {/* Icon */}
-        <div className="flex justify-center mb-6">
-          <span className="text-6xl">🏥</span>
-        </div>
+import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom';
+import AppShell from './components/layout/AppShell.jsx';
+import {
+  DashboardPage,
+  AppointmentsPage,
+  RecordsPage,
+  ProfilePage,
+  NotFoundPage,
+} from './pages/index.jsx';
 
-        {/* Heading */}
-        <h1 className="text-3xl font-bold text-indigo-700 mb-2">
-          Healthcare Management Dashboard
-        </h1>
+/**
+ * Application router.
+ *
+ * Structure:
+ *   /                   → redirect to /dashboard
+ *   / (AppShell layout)
+ *     /dashboard        → DashboardPage
+ *     /appointments     → AppointmentsPage
+ *     /records          → RecordsPage
+ *     /profile          → ProfilePage
+ *   *                   → NotFoundPage
+ *
+ * Auth-guarded routes will be added in a later step once the auth context
+ * (login/register flows) is wired up. For now all routes are accessible.
+ */
+const router = createBrowserRouter([
+  {
+    path: '/',
+    element: <AppShell />,
+    children: [
+      { index: true, element: <Navigate to="/dashboard" replace /> },
+      { path: 'dashboard',    element: <DashboardPage /> },
+      { path: 'appointments', element: <AppointmentsPage /> },
+      { path: 'records',      element: <RecordsPage /> },
+      { path: 'profile',      element: <ProfilePage /> },
+    ],
+  },
+  { path: '*', element: <NotFoundPage /> },
+]);
 
-        {/* Subheading */}
-        <p className="text-gray-500 text-sm mb-8">
-          React + Vite + Tailwind CSS · Frontend is running ✅
-        </p>
-
-        {/* Status badges */}
-        <div className="flex justify-center gap-3 flex-wrap">
-          <span className="bg-indigo-100 text-indigo-700 text-xs font-semibold px-3 py-1 rounded-full">
-            React 18
-          </span>
-          <span className="bg-sky-100 text-sky-700 text-xs font-semibold px-3 py-1 rounded-full">
-            Vite 5
-          </span>
-          <span className="bg-teal-100 text-teal-700 text-xs font-semibold px-3 py-1 rounded-full">
-            Tailwind CSS 3
-          </span>
-        </div>
-      </div>
-    </div>
-  );
+export default function App() {
+  return <RouterProvider router={router} />;
 }
-
-export default App;

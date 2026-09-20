@@ -2,12 +2,56 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Inter font from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* -------------------------------------------------------------------------
+   Base resets
+   ------------------------------------------------------------------------- */
 *, *::before, *::after {
   box-sizing: border-box;
 }
 
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  -webkit-font-smoothing: antialiased;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: #1f2937;       /* neutral-800 */
+  background-color: #f9fafb; /* neutral-50 */
+}
+
+/* -------------------------------------------------------------------------
+   Component layer — reusable class-based primitives that don't map cleanly
+   to a single Tailwind utility.
+   ------------------------------------------------------------------------- */
+@layer components {
+
+  /* --- Focus ring (keyboard-accessible, consistent across all controls) --- */
+  .focus-ring {
+    @apply outline-none ring-2 ring-primary-500 ring-offset-2;
+  }
+
+  /* --- Typography helpers ------------------------------------------------ */
+  .text-heading-1 { @apply text-3xl font-bold   text-neutral-900 tracking-tight; }
+  .text-heading-2 { @apply text-2xl font-semibold text-neutral-900 tracking-tight; }
+  .text-heading-3 { @apply text-xl  font-semibold text-neutral-800; }
+  .text-body      { @apply text-base font-normal  text-neutral-700; }
+  .text-body-sm   { @apply text-sm   font-normal  text-neutral-600; }
+  .text-meta      { @apply text-xs   font-medium  text-neutral-500 uppercase tracking-wide; }
+
+  /* --- Surface / card base ---------------------------------------------- */
+  .surface {
+    @apply bg-white border border-neutral-200 rounded-lg shadow-sm;
+  }
+
+  /* --- Divider ----------------------------------------------------------- */
+  .divider {
+    @apply border-t border-neutral-200;
+  }
 }
