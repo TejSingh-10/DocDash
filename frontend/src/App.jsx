@@ -1,6 +1,10 @@
 import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext.jsx';
-import { ProtectedRoute, PublicOnlyRoute } from './components/auth/RouteGuards.jsx';
+import {
+  ProtectedRoute,
+  PublicOnlyRoute,
+  RoleRoute,
+} from './components/auth/RouteGuards.jsx';
 import AppShell from './components/layout/AppShell.jsx';
 import LoginPage    from './pages/LoginPage.jsx';
 import RegisterPage from './pages/RegisterPage.jsx';
@@ -10,24 +14,31 @@ import {
   RecordsPage,
   ProfilePage,
   NotFoundPage,
+  NotAuthorizedPage,
 } from './pages/index.jsx';
 
 /**
- * Application router.
+ * Route structure:
  *
- * Structure:
- *   /login             → LoginPage    (public-only: redirects to /dashboard if signed in)
- *   /register          → RegisterPage (public-only)
- *   / (AppShell)       → protected: redirects to /login if not signed in
- *     /                → /dashboard
- *     /dashboard
- *     /appointments
- *     /records
- *     /profile
- *   *                  → NotFoundPage
+ *   /login              → LoginPage       (public-only)
+ *   /register           → RegisterPage    (public-only)
+ *   /unauthorized       → NotAuthorizedPage (public, no auth required)
+ *
+ *   / (AppShell)        → ProtectedRoute (redirects to /login if not authenticated)
+ *     /                 → /dashboard
+ *     /dashboard        → DOCTOR | PATIENT  (role differences handled inside page)
+ *     /appointments     → DOCTOR | PATIENT
+ *     /records          → DOCTOR | PATIENT  (role differences handled inside page)
+ *     /profile          → DOCTOR | PATIENT
+ *
+ *   *                   → NotFoundPage
+ *
+ * RoleRoute is wired here for future single-role routes.
+ * Multi-role pages (dashboard, appointments, records, profile) handle per-role
+ * UI differences internally rather than splitting into separate routes.
  */
 const router = createBrowserRouter([
-  // ── Public-only routes ───────────────────────────────────────────────────
+  // ── Public-only ──────────────────────────────────────────────────────────
   {
     path: '/login',
     element: (
@@ -45,6 +56,9 @@ const router = createBrowserRouter([
     ),
   },
 
+  // ── Public error page (no auth required) ─────────────────────────────────
+  { path: '/unauthorized', element: <NotAuthorizedPage /> },
+
   // ── Protected app shell ──────────────────────────────────────────────────
   {
     path: '/',
@@ -54,15 +68,45 @@ const router = createBrowserRouter([
       </ProtectedRoute>
     ),
     children: [
-      { index: true,           element: <Navigate to="/dashboard" replace /> },
-      { path: 'dashboard',     element: <DashboardPage /> },
-      { path: 'appointments',  element: <AppointmentsPage /> },
-      { path: 'records',       element: <RecordsPage /> },
-      { path: 'profile',       element: <ProfilePage /> },
+      { index: true, element: <Navigate to="/dashboard" replace /> },
+
+      // Open to both DOCTOR and PATIENT — per-role UI handled inside each page.
+      {
+        path: 'dashboard',
+        element: (
+          <RoleRoute roles={['DOCTOR', 'PATIENT']}>
+            <DashboardPage />
+          </RoleRoute>
+        ),
+      },
+      {
+        path: 'appointments',
+        element: (
+          <RoleRoute roles={['DOCTOR', 'PATIENT']}>
+            <AppointmentsPage />
+          </RoleRoute>
+        ),
+      },
+      {
+        path: 'records',
+        element: (
+          <RoleRoute roles={['DOCTOR', 'PATIENT']}>
+            <RecordsPage />
+          </RoleRoute>
+        ),
+      },
+      {
+        path: 'profile',
+        element: (
+          <RoleRoute roles={['DOCTOR', 'PATIENT']}>
+            <ProfilePage />
+          </RoleRoute>
+        ),
+      },
     ],
   },
 
-  // ── Catch-all ────────────────────────────────────────────────────────────
+  // ── Catch-all ─────────────────────────────────────────────────────────────
   { path: '*', element: <NotFoundPage /> },
 ]);
 

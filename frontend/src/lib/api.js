@@ -56,4 +56,11 @@ export const api = {
   /** POST /api/auth/login */
   login: (body) =>
     apiFetch('/auth/login', { method: 'POST', body: JSON.stringify(body) }),
+
+  /**
+   * GET /api/me — verify a stored token is still valid and fetch fresh user data.
+   * Called once on app load to confirm the persisted JWT hasn't expired.
+   */
+  me: (token) =>
+    apiFetch('/me', { token }),
 };

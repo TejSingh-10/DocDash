@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import Card from '../components/ui/Card.jsx';
 
 /**
@@ -66,6 +67,30 @@ export function NotFoundPage() {
     <div className="flex flex-col items-center justify-center h-full text-center gap-4">
       <p className="text-3xl font-bold text-neutral-300">404</p>
       <p className="text-body text-neutral-500">Page not found.</p>
+    </div>
+  );
+}
+
+/**
+ * Shown when a user is authenticated but their role doesn't satisfy
+ * the RoleRoute requirement for the requested page.
+ */
+export function NotAuthorizedPage() {
+  return (
+    <div className="min-h-screen flex items-center justify-center p-4 bg-neutral-50">
+      <div className="text-center max-w-sm">
+        <p className="text-5xl font-bold text-neutral-200 mb-4">403</p>
+        <h1 className="text-heading-3 mb-2">Access restricted</h1>
+        <p className="text-body-sm mb-6">
+          Your account role doesn&apos;t have permission to view this page.
+        </p>
+        <Link
+          to="/dashboard"
+          className="text-sm font-medium text-primary-600 hover:text-primary-700 underline-offset-2 hover:underline"
+        >
+          ← Back to Dashboard
+        </Link>
+      </div>
     </div>
   );
 }

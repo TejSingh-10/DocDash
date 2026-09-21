@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { api } from '../lib/api.js';
 
 // ---------------------------------------------------------------------------
 // Auth context
@@ -9,48 +10,95 @@ const AuthContext = createContext(null);
 const STORAGE_KEY_TOKEN = 'hcd_token';
 const STORAGE_KEY_USER  = 'hcd_user';
 
-/**
- * Reads the persisted session from localStorage.
- * Returns { token, user } or { token: null, user: null } if nothing stored.
- */
-function readStoredSession() {
+function readStoredToken() {
   try {
-    const token = localStorage.getItem(STORAGE_KEY_TOKEN);
-    const user  = JSON.parse(localStorage.getItem(STORAGE_KEY_USER) ?? 'null');
-    return token && user ? { token, user } : { token: null, user: null };
+    return localStorage.getItem(STORAGE_KEY_TOKEN) ?? null;
   } catch {
-    return { token: null, user: null };
+    return null;
   }
+}
+
+function persistSession(token, user) {
+  localStorage.setItem(STORAGE_KEY_TOKEN, token);
+  localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(user));
+}
+
+function clearPersistedSession() {
+  localStorage.removeItem(STORAGE_KEY_TOKEN);
+  localStorage.removeItem(STORAGE_KEY_USER);
 }
 
 // ---------------------------------------------------------------------------
 // AuthProvider
 // ---------------------------------------------------------------------------
 
+/**
+ * Provides auth state to the entire app.
+ *
+ * On mount, if a JWT is found in localStorage, the provider calls GET /api/me
+ * to verify the token is still valid (not expired, not revoked) and to fetch
+ * fresh user data. During this check, `isLoading` is true — route guards must
+ * suspend rendering until loading is complete to avoid a flash redirect to /login
+ * for users with a valid stored session.
+ *
+ * Exposed context shape:
+ *   user            — { id, email, role } | null
+ *   role            — 'DOCTOR' | 'PATIENT' | 'ADMIN' | null (shorthand for user.role)
+ *   token           — JWT string | null
+ *   isAuthenticated — Boolean
+ *   isLoading       — true while the stored token is being verified on app load
+ *   login(token, user) — call after a successful login / register response
+ *   logout()           — clears state and storage
+ */
 export function AuthProvider({ children }) {
-  const [session, setSession] = useState(() => readStoredSession());
+  const [user,      setUser]      = useState(null);
+  const [token,     setToken]     = useState(null);
+  const [isLoading, setIsLoading] = useState(true); // true until initial verification done
 
-  /**
-   * Persist a successful auth result (login or register response).
-   * Stores the JWT in localStorage for persistence across page reloads.
-   */
-  const login = useCallback((token, user) => {
-    localStorage.setItem(STORAGE_KEY_TOKEN, token);
-    localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(user));
-    setSession({ token, user });
+  // On mount: verify any stored token with the backend.
+  useEffect(() => {
+    const storedToken = readStoredToken();
+
+    if (!storedToken) {
+      // No token stored — skip the network call, not authenticated.
+      setIsLoading(false);
+      return;
+    }
+
+    api.me(storedToken)
+      .then(({ user: freshUser }) => {
+        // Token valid — restore the session with fresh user data.
+        setToken(storedToken);
+        setUser(freshUser);
+        persistSession(storedToken, freshUser);
+      })
+      .catch(() => {
+        // Token expired or invalid — clear stale data silently.
+        clearPersistedSession();
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  }, []); // runs once on mount
+
+  const login = useCallback((newToken, newUser) => {
+    persistSession(newToken, newUser);
+    setToken(newToken);
+    setUser(newUser);
   }, []);
 
-  /** Clear the session. */
   const logout = useCallback(() => {
-    localStorage.removeItem(STORAGE_KEY_TOKEN);
-    localStorage.removeItem(STORAGE_KEY_USER);
-    setSession({ token: null, user: null });
+    clearPersistedSession();
+    setToken(null);
+    setUser(null);
   }, []);
 
   const value = {
-    user:          session.user,
-    token:         session.token,
-    isAuthenticated: Boolean(session.token),
+    user,
+    role:            user?.role ?? null,
+    token,
+    isAuthenticated: Boolean(token),
+    isLoading,
     login,
     logout,
   };
@@ -64,7 +112,7 @@ export function AuthProvider({ children }) {
 
 /**
  * Returns the auth context value.
- * Must be used inside <AuthProvider>.
+ * Must be called inside a component that is a descendant of <AuthProvider>.
  */
 export function useAuth() {
   const ctx = useContext(AuthContext);
