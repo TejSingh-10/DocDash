@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import Appointment from '../models/Appointment.js';
+import PatientProfile from '../models/PatientProfile.js';
 import { authenticate, authorize } from '../middleware/auth.js';
 
 const router = Router();
@@ -86,6 +87,57 @@ router.get(
       });
     } catch (err) {
       console.error('[GET /api/appointments/me]', err);
+      return res.status(500).json({ error: 'An unexpected error occurred.' });
+    }
+  },
+);
+
+// ---------------------------------------------------------------------------
+// GET /api/appointments/patient-me
+// Returns the authenticated PATIENT's own appointments.
+//
+// Response shape:
+//   { nextAppointment: Appointment|null, recentAppointments: Appointment[] }
+//
+// nextAppointment — the next SCHEDULED appointment in the future (or null)
+// recentAppointments — last 10 appointments (any status), newest first
+//
+// The doctor field is populated with { _id, email } from User.
+// ---------------------------------------------------------------------------
+
+router.get(
+  '/patient-me',
+  authenticate,
+  authorize('PATIENT'),
+  async (req, res) => {
+    try {
+      const now = new Date();
+
+      // Next upcoming appointment — earliest future SCHEDULED one
+      const nextAppointment = await Appointment.findOne({
+        patient: req.user.id,
+        status: 'SCHEDULED',
+        scheduledAt: { $gt: now },
+      })
+        .populate('doctor', 'email')
+        .sort({ scheduledAt: 1 })
+        .lean();
+
+      // Recent history — last 10 appointments regardless of status
+      const recentAppointments = await Appointment.find({
+        patient: req.user.id,
+      })
+        .populate('doctor', 'email')
+        .sort({ scheduledAt: -1 })
+        .limit(10)
+        .lean();
+
+      return res.status(200).json({
+        nextAppointment,
+        recentAppointments,
+      });
+    } catch (err) {
+      console.error('[GET /api/appointments/patient-me]', err);
       return res.status(500).json({ error: 'An unexpected error occurred.' });
     }
   },

@@ -58,8 +58,7 @@ export const api = {
     apiFetch('/auth/login', { method: 'POST', body: JSON.stringify(body) }),
 
   /**
-   * GET /api/me — verify a stored token is still valid and fetch fresh user data.
-   * Called once on app load to confirm the persisted JWT hasn't expired.
+   * GET /api/me — verify a stored token and fetch fresh user data on app load.
    */
   me: (token) =>
     apiFetch('/me', { token }),
@@ -67,13 +66,28 @@ export const api = {
   appointments: {
     /**
      * GET /api/appointments/me?date=YYYY-MM-DD
-     * Returns today's appointments + recent patients for the authenticated doctor.
-     * @param {string} token
-     * @param {string} [date] — ISO date override (defaults to today on the server)
+     * Doctor: today's appointments + recent patients.
      */
     getMyDashboard: (token, date) => {
       const qs = date ? `?date=${date}` : '';
       return apiFetch(`/appointments/me${qs}`, { token });
     },
+
+    /**
+     * GET /api/appointments/patient-me
+     * Patient: next upcoming appointment + recent history.
+     */
+    getPatientDashboard: (token) =>
+      apiFetch('/appointments/patient-me', { token }),
+  },
+
+  records: {
+    /**
+     * GET /api/records/patient/:patientId
+     * Patient: own records (pass their userId as patientId).
+     * Doctor: records they authored for that patient.
+     */
+    getForPatient: (token, patientId) =>
+      apiFetch(`/records/patient/${patientId}`, { token }),
   },
 };

@@ -1,13 +1,15 @@
-import { forwardRef } from 'react';
+import { forwardRef, cloneElement, Children } from 'react';
 
 /**
  * Button
  *
  * variant: 'primary' | 'secondary' | 'ghost' | 'danger'
  * size:    'sm' | 'md' | 'lg'
+ * asChild: when true, renders the single child element with button styles applied
+ *          to it rather than wrapping in a <button>. Useful for Link buttons:
+ *            <Button asChild><Link to="/x">Go</Link></Button>
  *
- * Accepts all standard <button> props (onClick, disabled, type, etc.)
- * via forwardRef so it can be used inside form libraries.
+ * Accepts all standard <button> props via forwardRef.
  */
 
 const base =
@@ -31,15 +33,18 @@ const sizes = {
 };
 
 const Button = forwardRef(function Button(
-  { variant = 'primary', size = 'md', className = '', children, ...props },
+  { variant = 'primary', size = 'md', className = '', asChild = false, children, ...props },
   ref,
 ) {
+  const cls = [base, variants[variant], sizes[size], className].join(' ');
+
+  if (asChild) {
+    const child = Children.only(children);
+    return cloneElement(child, { className: [cls, child.props.className ?? ''].join(' ').trim(), ref });
+  }
+
   return (
-    <button
-      ref={ref}
-      className={[base, variants[variant], sizes[size], className].join(' ')}
-      {...props}
-    >
+    <button ref={ref} className={cls} {...props}>
       {children}
     </button>
   );
