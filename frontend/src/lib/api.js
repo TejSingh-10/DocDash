@@ -63,4 +63,17 @@ export const api = {
    */
   me: (token) =>
     apiFetch('/me', { token }),
+
+  appointments: {
+    /**
+     * GET /api/appointments/me?date=YYYY-MM-DD
+     * Returns today's appointments + recent patients for the authenticated doctor.
+     * @param {string} token
+     * @param {string} [date] — ISO date override (defaults to today on the server)
+     */
+    getMyDashboard: (token, date) => {
+      const qs = date ? `?date=${date}` : '';
+      return apiFetch(`/appointments/me${qs}`, { token });
+    },
+  },
 };

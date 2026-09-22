@@ -1,5 +1,7 @@
 import { Link } from 'react-router-dom';
 import Card from '../components/ui/Card.jsx';
+import { useAuth } from '../context/AuthContext.jsx';
+import DoctorDashboard from './DoctorDashboard.jsx';
 
 /**
  * Placeholder page component factory.
@@ -27,10 +29,17 @@ function PlaceholderPage({ title, description }) {
 }
 
 export function DashboardPage() {
+  const { role } = useAuth();
+
+  if (role === 'DOCTOR') {
+    return <DoctorDashboard />;
+  }
+
+  // Patient dashboard — placeholder until built in a later step
   return (
     <PlaceholderPage
       title="Dashboard"
-      description="Overview of your appointments, recent activity, and key metrics."
+      description="Overview of your upcoming appointments and recent records."
     />
   );
 }
