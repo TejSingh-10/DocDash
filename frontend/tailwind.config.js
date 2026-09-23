@@ -50,10 +50,12 @@ export default {
       warning: {
         50:  '#fffbeb',
         500: '#f59e0b',
+        600: '#d97706',
         700: '#b45309',
       },
       danger: {
         50:  '#fef2f2',
+        200: '#fecaca',
         500: '#ef4444',
         700: '#b91c1c',
       },

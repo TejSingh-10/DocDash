@@ -3,6 +3,8 @@ import Card from '../components/ui/Card.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import DoctorDashboard from './DoctorDashboard.jsx';
 import PatientDashboard from './PatientDashboard.jsx';
+import DoctorAppointments from './DoctorAppointments.jsx';
+import PatientAppointments from './PatientAppointments.jsx';
 
 /**
  * Placeholder page component factory.
@@ -45,12 +47,10 @@ export function DashboardPage() {
 }
 
 export function AppointmentsPage() {
-  return (
-    <PlaceholderPage
-      title="Appointments"
-      description="Schedule, view, and manage patient appointments."
-    />
-  );
+  const { role } = useAuth();
+  if (role === 'DOCTOR')  return <DoctorAppointments />;
+  if (role === 'PATIENT') return <PatientAppointments />;
+  return <PlaceholderPage title="Appointments" description="Manage appointments." />;
 }
 
 export function RecordsPage() {

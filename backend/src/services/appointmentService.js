@@ -45,7 +45,7 @@ const WORKING_HOURS_END_UTC   = 18; // 18:00 UTC
  * @param {number} durationMinutes - Length of the appointment in minutes (> 0).
  * @returns {Promise<{ ok: true } | { ok: false, code: string, reason: string }>}
  */
-export async function checkAppointmentConflict(doctorId, scheduledAt, durationMinutes) {
+export async function checkAppointmentConflict(doctorId, scheduledAt, durationMinutes, excludeId = null) {
   const requestedStart = new Date(scheduledAt);
   const requestedEnd   = new Date(requestedStart.getTime() + durationMinutes * 60_000);
 
@@ -102,6 +102,7 @@ export async function checkAppointmentConflict(doctorId, scheduledAt, durationMi
   // ------------------------------------------------------------------
 
   const conflicting = await Appointment.findOne({
+    ...(excludeId ? { _id: { $ne: excludeId } } : {}), // exclude self when rescheduling
     doctor: doctorId,
     status: { $ne: 'CANCELLED' },           // cancelled slots don't block the calendar
     scheduledAt: { $lt: requestedEnd },      // existing appointment starts before new one ends

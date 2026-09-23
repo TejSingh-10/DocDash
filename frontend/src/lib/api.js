@@ -40,6 +40,7 @@ async function apiFetch(path, { token, ...options } = {}) {
   if (!res.ok) {
     const err = Object.assign(new Error(data.error ?? 'Request failed'), {
       status: res.status,
+      code:   data.code,   // machine-readable code, e.g. APPOINTMENT_CONFLICT
       issues: data.issues,
     });
     throw err;
@@ -64,29 +65,59 @@ export const api = {
     apiFetch('/me', { token }),
 
   appointments: {
-    /**
-     * GET /api/appointments/me?date=YYYY-MM-DD
-     * Doctor: today's appointments + recent patients.
-     */
+    /** GET /api/appointments/me — doctor dashboard data */
     getMyDashboard: (token, date) => {
       const qs = date ? `?date=${date}` : '';
       return apiFetch(`/appointments/me${qs}`, { token });
     },
 
-    /**
-     * GET /api/appointments/patient-me
-     * Patient: next upcoming appointment + recent history.
-     */
+    /** GET /api/appointments/all?filter=upcoming|past|cancelled — doctor full list */
+    getAll: (token, filter = '') =>
+      apiFetch(`/appointments/all${filter ? `?filter=${filter}` : ''}`, { token }),
+
+    /** GET /api/appointments/patient-me — patient dashboard data */
     getPatientDashboard: (token) =>
       apiFetch('/appointments/patient-me', { token }),
+
+    /** GET /api/appointments/patient-me — patient full appointments list */
+    getPatientAll: (token) =>
+      apiFetch('/appointments/patient-me', { token }),
+
+    /**
+     * POST /api/appointments — patient books a slot.
+     * Body: { doctorId, scheduledAt, durationMinutes, reason? }
+     * Throws with .code on conflict (APPOINTMENT_CONFLICT, OUTSIDE_WORKING_HOURS, …)
+     */
+    book: (token, body) =>
+      apiFetch('/appointments', { token, method: 'POST', body: JSON.stringify(body) }),
+
+    /**
+     * PATCH /api/appointments/:id/status
+     * Doctor: COMPLETED | NO_SHOW
+     * Patient: CANCELLED
+     */
+    updateStatus: (token, id, status) =>
+      apiFetch(`/appointments/${id}/status`, {
+        token, method: 'PATCH', body: JSON.stringify({ status }),
+      }),
+
+    /**
+     * PATCH /api/appointments/:id/reschedule — patient reschedules.
+     * Body: { scheduledAt, durationMinutes? }
+     */
+    reschedule: (token, id, body) =>
+      apiFetch(`/appointments/${id}/reschedule`, {
+        token, method: 'PATCH', body: JSON.stringify(body),
+      }),
+  },
+
+  doctors: {
+    /** GET /api/doctors — list active doctors (public fields). */
+    list: (token) => apiFetch('/doctors', { token }),
   },
 
   records: {
-    /**
-     * GET /api/records/patient/:patientId
-     * Patient: own records (pass their userId as patientId).
-     * Doctor: records they authored for that patient.
-     */
+    /** GET /api/records/patient/:patientId */
     getForPatient: (token, patientId) =>
       apiFetch(`/records/patient/${patientId}`, { token }),
   },
