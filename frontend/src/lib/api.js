@@ -117,8 +117,30 @@ export const api = {
   },
 
   records: {
-    /** GET /api/records/patient/:patientId */
+    /** GET /api/records/patient/:patientId — patient's own records */
     getForPatient: (token, patientId) =>
       apiFetch(`/records/patient/${patientId}`, { token }),
+
+    /** GET /api/records/mine?patientId= — doctor's authored records */
+    getMine: (token, patientId = '') => {
+      const qs = patientId ? `?patientId=${patientId}` : '';
+      return apiFetch(`/records/mine${qs}`, { token });
+    },
+
+    /** GET /api/records/mine/patients — distinct patients doctor has records for */
+    getMinePatients: (token) =>
+      apiFetch('/records/mine/patients', { token }),
+
+    /** POST /api/records — create a record (DOCTOR only) */
+    create: (token, body) =>
+      apiFetch('/records', { token, method: 'POST', body: JSON.stringify(body) }),
+
+    /** PATCH /api/records/:id — update prescription/notes (author DOCTOR only) */
+    update: (token, id, body) =>
+      apiFetch(`/records/${id}`, { token, method: 'PATCH', body: JSON.stringify(body) }),
+
+    /** PATCH /api/records/:id/archive — soft-delete (author DOCTOR only) */
+    archive: (token, id) =>
+      apiFetch(`/records/${id}/archive`, { token, method: 'PATCH' }),
   },
 };

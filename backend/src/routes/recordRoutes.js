@@ -137,6 +137,89 @@ router.get(
 );
 
 // ---------------------------------------------------------------------------
+// GET /api/records/mine
+// DOCTOR only — all records the authenticated doctor has authored.
+//
+// Query params:
+//   patientId  — filter to a specific patient (optional)
+//   search     — partial email match against populated patient email (client-side;
+//                server returns all, UI filters) — kept simple for now
+//
+// Returns records newest-first, patient field populated with { _id, email }.
+// Backend enforces doctor-only authorship: query always includes doctor: userId.
+// ---------------------------------------------------------------------------
+
+router.get(
+  '/mine',
+  authenticate,
+  authorize('DOCTOR'),
+  async (req, res) => {
+    const { id: userId } = req.user;
+    const { patientId } = req.query;
+
+    try {
+      const query = {
+        doctor: userId,
+        isArchived: false,
+        ...(patientId ? { patient: patientId } : {}),
+      };
+
+      const records = await withAudit(
+        {
+          userId,
+          action: 'LIST',
+          resourceType: RESOURCE_TYPE,
+          resourceId: null,
+          metadata: { source: 'mine', patientId: patientId ?? null },
+        },
+        () =>
+          MedicalRecord.find(query)
+            .populate('patient', 'email')
+            .sort({ createdAt: -1 })
+            .select('-__v')
+            .lean(),
+      );
+
+      return res.status(200).json({ count: records.length, records });
+    } catch (err) {
+      console.error('[GET /api/records/mine] Unexpected error:', err);
+      return res.status(500).json({ error: 'An unexpected error occurred.' });
+    }
+  },
+);
+
+// ---------------------------------------------------------------------------
+// GET /api/records/mine/patients
+// DOCTOR only — distinct patients for whom the doctor has authored records.
+// Used to populate the patient-filter dropdown in the UI.
+// ---------------------------------------------------------------------------
+
+router.get(
+  '/mine/patients',
+  authenticate,
+  authorize('DOCTOR'),
+  async (req, res) => {
+    try {
+      const patientIds = await MedicalRecord.distinct('patient', {
+        doctor: req.user.id,
+        isArchived: false,
+      });
+
+      // Populate emails — we need User model for this
+      const User = (await import('../models/User.js')).default;
+      const users = await User.find({ _id: { $in: patientIds } })
+        .select('email')
+        .lean();
+
+      return res.status(200).json({ patients: users });
+    } catch (err) {
+      console.error('[GET /api/records/mine/patients] Unexpected error:', err);
+      return res.status(500).json({ error: 'An unexpected error occurred.' });
+    }
+  },
+);
+
+// ---------------------------------------------------------------------------
 // PATCH /api/records/:id
 // Author DOCTOR only. Updates prescription, notes, and/or attachmentUrl.
 // diagnosis and patient are immutable after creation.

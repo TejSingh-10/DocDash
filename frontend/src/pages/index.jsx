@@ -5,6 +5,8 @@ import DoctorDashboard from './DoctorDashboard.jsx';
 import PatientDashboard from './PatientDashboard.jsx';
 import DoctorAppointments from './DoctorAppointments.jsx';
 import PatientAppointments from './PatientAppointments.jsx';
+import DoctorRecords from './DoctorRecords.jsx';
+import PatientRecords from './PatientRecords.jsx';
 
 /**
  * Placeholder page component factory.
@@ -54,12 +56,10 @@ export function AppointmentsPage() {
 }
 
 export function RecordsPage() {
-  return (
-    <PlaceholderPage
-      title="Medical Records"
-      description="Create and access patient medical records."
-    />
-  );
+  const { role } = useAuth();
+  if (role === 'DOCTOR')  return <DoctorRecords />;
+  if (role === 'PATIENT') return <PatientRecords />;
+  return <PlaceholderPage title="Records" description="Medical records." />;
 }
 
 export function ProfilePage() {
