@@ -72,7 +72,7 @@ function MenuIcon({ className }) {
 // Sidebar
 // ---------------------------------------------------------------------------
 
-function Sidebar({ collapsed, onToggle, user }) {
+function Sidebar({ collapsed, onToggle, user, onNavClick = () => {} }) {
   return (
     <aside
       className={[
@@ -101,12 +101,12 @@ function Sidebar({ collapsed, onToggle, user }) {
       <nav className="flex-1 py-3 overflow-y-auto" aria-label="Main navigation">
         <ul className="space-y-0.5 px-2">
           {NAV_ITEMS
-            // Filter by role if the item declares one
             .filter(item => !item.roles || item.roles.includes(user?.role))
             .map(({ to, label, icon: Icon }) => (
             <li key={to}>
               <NavLink
                 to={to}
+                onClick={onNavClick}
                 className={({ isActive }) =>
                   [
                     'flex items-center gap-3 px-2 py-2 rounded text-sm font-medium',
@@ -201,22 +201,54 @@ function Navbar({ onMenuClick }) {
 // ---------------------------------------------------------------------------
 
 export default function AppShell() {
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed,  setCollapsed]  = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const { user } = useAuth();
 
   return (
     <div className="flex h-screen overflow-hidden bg-neutral-50">
-      {/* Sidebar — hidden on mobile, always visible on md+ */}
-      <div className="hidden md:flex">
-        <Sidebar collapsed={collapsed} onToggle={() => setCollapsed((c) => !c)} user={user} />
+
+      {/* ── Desktop sidebar — always visible on md+ ─────────────────────── */}
+      <div className="hidden md:flex shrink-0">
+        <Sidebar
+          collapsed={collapsed}
+          onToggle={() => setCollapsed((c) => !c)}
+          user={user}
+          onNavClick={() => {}}
+        />
       </div>
 
-      {/* Main area */}
-      <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
-        <Navbar onMenuClick={() => setCollapsed((c) => !c)} />
+      {/* ── Mobile sidebar drawer ────────────────────────────────────────── */}
+      {mobileOpen && (
+        <>
+          <div
+            className="fixed inset-0 z-40 bg-black/30 md:hidden"
+            onClick={() => setMobileOpen(false)}
+            aria-hidden="true"
+          />
+          <div className="fixed inset-y-0 left-0 z-50 md:hidden">
+            <Sidebar
+              collapsed={false}
+              onToggle={() => setMobileOpen(false)}
+              user={user}
+              onNavClick={() => setMobileOpen(false)}
+            />
+          </div>
+        </>
+      )}
 
-        {/* Page content — routed pages render here via <Outlet> */}
-        <main className="flex-1 overflow-y-auto p-6">
+      {/* ── Main area ────────────────────────────────────────────────────── */}
+      <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
+        <Navbar
+          onMenuClick={() => {
+            if (window.innerWidth >= 768) {
+              setCollapsed((c) => !c);
+            } else {
+              setMobileOpen((o) => !o);
+            }
+          }}
+        />
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6">
           <Outlet />
         </main>
       </div>

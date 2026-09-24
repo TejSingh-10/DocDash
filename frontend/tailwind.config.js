@@ -151,6 +151,16 @@ export default {
       ringOffsetWidth: {
         DEFAULT: '2px',
       },
+      // Toast slide-in animation
+      keyframes: {
+        'slide-in': {
+          from: { opacity: '0', transform: 'translateY(8px)' },
+          to:   { opacity: '1', transform: 'translateY(0)' },
+        },
+      },
+      animation: {
+        'slide-in': 'slide-in 0.18s ease-out both',
+      },
     },
   },
   plugins: [],

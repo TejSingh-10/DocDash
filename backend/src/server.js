@@ -9,6 +9,7 @@ import patientRoutes from './routes/patientRoutes.js';
 import recordRoutes from './routes/recordRoutes.js';
 import appointmentRoutes from './routes/appointmentRoutes.js';
 import analyticsRoutes from './routes/analyticsRoutes.js';
+import { errorHandler } from './middleware/errorHandler.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -48,6 +49,14 @@ app.get('/', (_req, res) => {
 app.get('/health', (_req, res) => {
   res.json({ status: 'healthy' });
 });
+
+// 404 handler — must come after all routes
+app.use((_req, res) => {
+  res.status(404).json({ error: 'Route not found.', code: 'NOT_FOUND' });
+});
+
+// Global error handler — must be the LAST middleware (4-argument signature)
+app.use(errorHandler);
 
 // Connect to MongoDB first; only start the HTTP server if it succeeds.
 connectDB()

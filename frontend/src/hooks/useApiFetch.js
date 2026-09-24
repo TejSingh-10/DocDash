@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
+import { useToast } from '../context/ToastContext.jsx';
 
 /**
  * useApiFetch — generic data-fetching hook for authenticated API calls.
@@ -10,11 +11,12 @@ import { useAuth } from '../context/AuthContext.jsx';
  * Returns { data, loading, error, refetch }
  *
  * - On mount (and whenever deps change), calls fetcher with the current token.
- * - Handles 401 by setting error without crashing the component.
+ * - On error: sets local `error` string AND fires a global toast notification.
  * - `refetch` allows manual refresh without changing deps.
  */
 export function useApiFetch(fetcher, deps = []) {
   const { token } = useAuth();
+  const toast = useToast();
   const [data,    setData]    = useState(null);
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState(null);
@@ -41,8 +43,13 @@ export function useApiFetch(fetcher, deps = []) {
       })
       .catch((err) => {
         if (!cancelled) {
-          setError(err.message ?? 'Failed to load data.');
+          const msg = err.message ?? 'Failed to load data.';
+          setError(msg);
           setLoading(false);
+          // Don't toast auth errors — those are handled by the auth flow
+          if (err.status !== 401 && err.status !== 403) {
+            toast.error(msg);
+          }
         }
       });
 
