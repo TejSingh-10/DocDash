@@ -16,6 +16,7 @@ import {
   NotFoundPage,
   NotAuthorizedPage,
 } from './pages/index.jsx';
+import AnalyticsPage from './pages/AnalyticsPage.jsx';
 
 /**
  * Route structure:
@@ -100,6 +101,16 @@ const router = createBrowserRouter([
         element: (
           <RoleRoute roles={['DOCTOR', 'PATIENT']}>
             <ProfilePage />
+          </RoleRoute>
+        ),
+      },
+      {
+        path: 'analytics',
+        element: (
+          // ADMIN + DOCTOR only — patients are redirected to /unauthorized.
+          // The backend also enforces this, but the route guard is the first wall.
+          <RoleRoute roles={['DOCTOR', 'ADMIN']}>
+            <AnalyticsPage />
           </RoleRoute>
         ),
       },

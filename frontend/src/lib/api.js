@@ -116,6 +116,11 @@ export const api = {
     list: (token) => apiFetch('/doctors', { token }),
   },
 
+  analytics: {
+    /** GET /api/analytics/summary — aggregated stats (DOCTOR + ADMIN). */
+    getSummary: (token) => apiFetch('/analytics/summary', { token }),
+  },
+
   records: {
     /** GET /api/records/patient/:patientId — patient's own records */
     getForPatient: (token, patientId) =>

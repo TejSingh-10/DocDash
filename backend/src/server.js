@@ -8,6 +8,7 @@ import doctorRoutes from './routes/doctorRoutes.js';
 import patientRoutes from './routes/patientRoutes.js';
 import recordRoutes from './routes/recordRoutes.js';
 import appointmentRoutes from './routes/appointmentRoutes.js';
+import analyticsRoutes from './routes/analyticsRoutes.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -32,6 +33,9 @@ app.use('/api/records', recordRoutes);
 
 // Appointment routes
 app.use('/api/appointments', appointmentRoutes);
+
+// Analytics routes (DOCTOR + ADMIN)
+app.use('/api/analytics', analyticsRoutes);
 
 app.get('/', (_req, res) => {
   res.json({

@@ -4,12 +4,15 @@ import { useAuth } from '../../context/AuthContext.jsx';
 
 // ---------------------------------------------------------------------------
 // Nav items — add new routes here; the sidebar renders them automatically.
+// The optional `roles` field restricts a link to specific roles.
+// When omitted, the link is visible to all authenticated users.
 // ---------------------------------------------------------------------------
 const NAV_ITEMS = [
-  { to: '/dashboard',    label: 'Dashboard',     icon: DashboardIcon },
-  { to: '/appointments', label: 'Appointments',  icon: CalendarIcon  },
-  { to: '/records',      label: 'Records',       icon: RecordsIcon   },
-  { to: '/profile',      label: 'Profile',       icon: ProfileIcon   },
+  { to: '/dashboard',    label: 'Dashboard',    icon: DashboardIcon },
+  { to: '/appointments', label: 'Appointments', icon: CalendarIcon  },
+  { to: '/records',      label: 'Records',      icon: RecordsIcon   },
+  { to: '/analytics',   label: 'Analytics',    icon: AnalyticsIcon, roles: ['DOCTOR', 'ADMIN'] },
+  { to: '/profile',      label: 'Profile',      icon: ProfileIcon   },
 ];
 
 // ---------------------------------------------------------------------------
@@ -45,6 +48,14 @@ function ProfileIcon({ className }) {
   return (
     <svg className={className} viewBox="0 0 20 20" fill="currentColor">
       <path fillRule="evenodd" d="M10 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm-7 9a7 7 0 1 1 14 0H3z" clipRule="evenodd" />
+    </svg>
+  );
+}
+
+function AnalyticsIcon({ className }) {
+  return (
+    <svg className={className} viewBox="0 0 20 20" fill="currentColor">
+      <path d="M2 11a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-5zm6-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V7zm6-3a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1V4z" />
     </svg>
   );
 }
@@ -89,7 +100,10 @@ function Sidebar({ collapsed, onToggle, user }) {
       {/* Nav links */}
       <nav className="flex-1 py-3 overflow-y-auto" aria-label="Main navigation">
         <ul className="space-y-0.5 px-2">
-          {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
+          {NAV_ITEMS
+            // Filter by role if the item declares one
+            .filter(item => !item.roles || item.roles.includes(user?.role))
+            .map(({ to, label, icon: Icon }) => (
             <li key={to}>
               <NavLink
                 to={to}
